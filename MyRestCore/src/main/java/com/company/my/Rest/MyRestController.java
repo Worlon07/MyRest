@@ -1,4 +1,4 @@
-package com.company.my.Rest;
+package com.company.my.rest;
 
 import org.springframework.stereotype.Controller;
 

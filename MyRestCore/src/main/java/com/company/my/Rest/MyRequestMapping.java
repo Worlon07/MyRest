@@ -1,4 +1,4 @@
-package com.company.my.Rest;
+package com.company.my.rest;
 
 import org.springframework.core.annotation.AliasFor;
 
@@ -22,10 +22,4 @@ public @interface MyRequestMapping {
     MyRequestMethod[] method() default {};
 
     String[] params() default {};
-
-    String[] headers() default {};
-
-    String[] consumes() default {};
-
-    String[] produces() default {};
 }

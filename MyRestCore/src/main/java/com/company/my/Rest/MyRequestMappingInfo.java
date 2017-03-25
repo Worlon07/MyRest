@@ -1,4 +1,4 @@
-package com.company.my.Rest;
+package com.company.my.rest;
 
 public class MyRequestMappingInfo {
     private String[] paths;
@@ -9,18 +9,25 @@ public class MyRequestMappingInfo {
 
     private final String mappingName;
 
-    public MyRequestMappingInfo(MyRequestMapping mapping) {
+    public MyRequestMappingInfo(final MyRequestMapping mapping) {
         mappingName = mapping.name();
         paths = mapping.path();
         methods = mapping.method();
         params = mapping.params();
     }
 
+    private MyRequestMappingInfo(final MyRequestMappingInfo mapping) {
+        mappingName = mapping.mappingName;
+        paths = mapping.paths;
+        methods = mapping.methods;
+        params = mapping.params;
+    }
+
     public String[] getPaths() {
         return paths;
     }
 
-    private MyRequestMethod[] getMethods() {
+    public MyRequestMethod[] getMethods() {
         return methods;
     }
 
@@ -33,24 +40,25 @@ public class MyRequestMappingInfo {
     }
 
     public MyRequestMappingInfo combine(final MyRequestMappingInfo info) {
-        if (paths.length == 0) {
-            paths = info.getPaths();
+        final MyRequestMappingInfo result = new MyRequestMappingInfo(this);
+        if (result.paths.length == 0) {
+            result.paths = info.getPaths();
         } else {
             if (info.getPaths().length > 0) {
                 final String[] otherPaths = info.getPaths();
-                final String[] newPaths = new String[otherPaths.length * paths.length];
+                final String[] newPaths = new String[otherPaths.length * result.paths.length];
                 for (int i = 0; i < otherPaths.length; i++) {
-                    for (int j = 0; j < paths.length; j++) {
-                        newPaths[i * newPaths.length + j] = paths[j] + otherPaths[i];
+                    for (int j = 0; j < result.paths.length; j++) {
+                        newPaths[i * otherPaths.length + j] = result.paths[j] + otherPaths[i];
                     }
                 }
-                paths = newPaths;
+                result.paths = newPaths;
             }
         }
-        if (methods.length == 0) {
-            methods = info.getMethods();
+        if (result.methods.length == 0) {
+            result.methods = info.getMethods();
         }
 
-        return this;
+        return result;
     }
 }

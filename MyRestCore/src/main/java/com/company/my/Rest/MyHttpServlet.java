@@ -1,4 +1,4 @@
-package com.company.my.Rest;
+package com.company.my.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -72,7 +72,7 @@ public class MyHttpServlet extends HttpServlet implements ApplicationContextAwar
                 if (parameters.length > 0) {
                     objects = new Object[parameters.length];
                     for (int i = 0; i < parameters.length; i++) {
-                        final String val = values.get("arg" + i);
+                        final String val = values.get(parameters[i].getName());
                         objects[i] = typeConverter.convertIfNecessary(val, parameters[i].getType());
                     }
                 }

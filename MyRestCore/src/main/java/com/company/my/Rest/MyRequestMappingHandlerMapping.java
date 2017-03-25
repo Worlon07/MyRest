@@ -1,4 +1,4 @@
-package com.company.my.Rest;
+package com.company.my.rest;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactoryUtils;
@@ -61,7 +61,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
     }
 
     private boolean isHandler(Class<?> beanType) {
-        return (AnnotatedElementUtils.hasAnnotation(beanType, Controller.class) ||
+        return (AnnotatedElementUtils.hasAnnotation(beanType, MyRestController.class) ||
                 AnnotatedElementUtils.hasAnnotation(beanType, MyRequestMapping.class));
     }
 
@@ -149,7 +149,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
                     if (find) {
                         for (int i = 0; i < isCondition.length; i++) {
                             if (isCondition[i]) {
-                                values.put("arg" + values.size(), splitPath[i]);
+                                values.put(splitKey[i].substring(1, splitKey[i].length() - 1), splitPath[i]);
                             }
                         }
                         result = entry.getValue();

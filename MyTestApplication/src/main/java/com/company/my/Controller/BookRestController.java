@@ -2,9 +2,9 @@ package com.company.my.Controller;
 
 import com.company.my.Model.Author;
 import com.company.my.Model.Book;
-import com.company.my.Rest.MyRequestMapping;
-import com.company.my.Rest.MyRequestMethod;
-import com.company.my.Rest.MyRestController;
+import com.company.my.rest.MyRequestMapping;
+import com.company.my.rest.MyRequestMethod;
+import com.company.my.rest.MyRestController;
 
 import java.util.Arrays;
 import java.util.Collection;
