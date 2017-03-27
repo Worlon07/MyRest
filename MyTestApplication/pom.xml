@@ -7,7 +7,6 @@
     <groupId>com.company.my</groupId>
     <artifactId>MyTestApplication</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
 
     <name>Test Application for my Spring Rest</name>
 
