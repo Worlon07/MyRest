@@ -116,4 +116,12 @@ public class MyHttpServletTest {
         myHttpServlet.doGet(request, response);
         assertEquals("34.2", response.getContentAsString());
     }
+
+    @Test
+    public void testWrongPath() throws Exception {
+        final MockHttpServletRequest request = new MockHttpServletRequest("get", "/test/NonExistingPath");
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        myHttpServlet.doGet(request, response);
+        assertEquals("", response.getContentAsString());
+    }
 }

@@ -7,17 +7,13 @@ import org.springframework.context.support.ApplicationObjectSupport;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.ClassUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The mapping for MyRequestMapping annotation
@@ -34,7 +30,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
     /**
      * List of the URL with conditions
      */
-    private final Map<String[], MyMappingRegistry> myConditionsMappingRegistries = new HashMap<>();
+    private final Map<PathCondition[], MyMappingRegistry> myConditionsMappingRegistries = new HashMap<>();
 
     private void initHandlerMethods() {
         final String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(getApplicationContext(), Object.class);
@@ -44,7 +40,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
             try {
                 beanType = getApplicationContext().getType(beanName);
             } catch (Throwable ex) {
-                ex.printStackTrace();
+                logger.error("Error in initHandler", ex);
             }
             if (beanType != null && isHandler(beanType)) {
                 detectHandlerMethods(beanName);
@@ -83,9 +79,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
                     }
                 });
 
-        if (logger.isDebugEnabled()) {
-            logger.debug(methods.size() + " request handler methods found on " + userType + ": " + methods);
-        }
+        logger.debug(methods.size() + " request handler methods found on " + userType + ": " + methods);
         for (final Map.Entry<Method, MyRequestMappingInfo> entry : methods.entrySet()) {
             Method invocableMethod = AopUtils.selectInvocableMethod(entry.getKey(), userType);
             MyRequestMappingInfo mapping = entry.getValue();
@@ -98,7 +92,7 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
         myMappingRegistries.add(mr);
         for (final String path : mapping.getPaths()) {
             if (path.contains("{")) {
-                myConditionsMappingRegistries.put(path.split("/"), mr);
+                myConditionsMappingRegistries.put(PathCondition.getPathConditions(path), mr);
             } else {
                 myStrictMappingRegistries.put(path, mr);
             }
@@ -123,39 +117,23 @@ public class MyRequestMappingHandlerMapping extends ApplicationObjectSupport imp
 
     MyMappingRegistry getHandlerInternal(final HttpServletRequest request, final Map<String, String> values) {
         final String lookupPath = request.getRequestURI();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Looking up handler method for path " + lookupPath);
-        }
+        logger.debug("Looking up handler method for path " + lookupPath);
         MyMappingRegistry result = myStrictMappingRegistries.get(lookupPath);
+
         if (result == null) {
             final String[] splitPath = lookupPath.split("/");
-            final boolean[] isCondition = new boolean[splitPath.length];
-            for (Map.Entry<String[], MyMappingRegistry> entry : myConditionsMappingRegistries.entrySet()) {
-                final String[] splitKey = entry.getKey();
-                boolean find = true;
-                if (splitKey.length == splitPath.length) {
-                    for (int i = 0; i < splitPath.length; i++) {
-                        if (!splitKey[i].equals(splitPath[i])) {
-                            if (splitKey[i].startsWith("{") && splitKey[i].endsWith("}")) {
-                                isCondition[i] = true;
-                            } else {
-                                find = false;
-                                break;
-                            }
-                        } else {
-                            isCondition[i] = false;
-                        }
-                    }
-                    if (find) {
-                        for (int i = 0; i < isCondition.length; i++) {
-                            if (isCondition[i]) {
-                                values.put(splitKey[i].substring(1, splitKey[i].length() - 1), splitPath[i]);
-                            }
-                        }
-                        result = entry.getValue();
-                        break;
+            final Optional<Map.Entry<PathCondition[], MyMappingRegistry>> entry =
+                    myConditionsMappingRegistries.entrySet().stream()
+                            .filter(e -> PathCondition.pathEquals(splitPath, e.getKey()))
+                            .findFirst();
+            if (entry.isPresent()) {
+                final PathCondition[] cond = entry.get().getKey();
+                for (int i = 0; i < splitPath.length; i++) {
+                    if (cond[i].isCondition()) {
+                        values.put(cond[i].getName(), splitPath[i]);
                     }
                 }
+                result = entry.get().getValue();
             }
         }
 

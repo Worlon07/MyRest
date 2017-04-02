@@ -2,6 +2,8 @@ package com.company.my.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.context.ApplicationContext;
@@ -20,6 +22,8 @@ import java.util.*;
  * The servlet to process http requests.
  */
 public class MyHttpServlet extends HttpServlet implements ApplicationContextAware {
+
+    private final Log logger = LogFactory.getLog(this.getClass());
 
     private ApplicationContext applicationContext;
 
@@ -68,21 +72,15 @@ public class MyHttpServlet extends HttpServlet implements ApplicationContextAwar
             MyRequestMappingHandlerMapping.MyMappingRegistry registry = mappingHandler.getHandlerInternal(request, values);
             if (registry != null) {
                 final Parameter[] parameters = registry.getParameters();
-                Object[] objects = null;
-                if (parameters.length > 0) {
-                    objects = new Object[parameters.length];
-                    for (int i = 0; i < parameters.length; i++) {
-                        final String val = values.get(parameters[i].getName());
-                        objects[i] = typeConverter.convertIfNecessary(val, parameters[i].getType());
-                    }
-                }
+                final Object[] objects = Arrays.stream(parameters).map(
+                        p -> typeConverter.convertIfNecessary(values.get(p.getName()), p.getType())).toArray();
                 ReflectionUtils.makeAccessible(registry.getInvocableMethod());
                 final Object bean = applicationContext.getAutowireCapableBeanFactory().getBean((String) registry.getHandler());
                 final Object result = registry.getInvocableMethod().invoke(bean, objects);
                 writeResponse(response, result);
             }
         } catch (final Exception e) {
-            e.printStackTrace();
+            logger.error("process request error", e);
         }
     }
 
